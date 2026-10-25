@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Monster } from './monster';
+import { IllustrationStudio } from './illustration-studio';
 import { Icon } from './icons';
 import { catalog, initialRecipe, slots, palettes, rollRecipe, createRecipe, monsterName, recipeKey, type Slot, type Recipe, type Favorite } from '@/lib/recipe';
 import { decodeState, STORAGE_KEY } from '@/lib/storage';
@@ -133,11 +134,13 @@ export function Mixer() {
       </aside>
     </div>
 
+    <IllustrationStudio recipe={recipe} onRemix={next => { setRecipe(next); animate(); setAnnouncement(`${monsterName(next)} is back from your illustration collection.`); }}/>
+
     <section className="favorites-section" aria-label="Saved favorites"><div className="favorites-heading"><div><Icon name="heart" size={20}/><h2>Your little collection</h2><span className="count">{favorites.length}/12</span></div><p>Good weirdos deserve a place to stay.</p></div>
       {favorites.length === 0 ? <div className="empty-shelf"><span className="empty-heart"><Icon name="heart" size={23}/></span><p><strong>Someone special will land here.</strong><span>Save a favorite and start your collection.</span></p><span className="shelf-doodle" aria-hidden="true">your kind of weird ↗</span></div> : <div className="favorites-grid">{favorites.map(favorite => <div className={`favorite-card ${favorite.id === recipeKey(recipe) ? 'current' : ''}`} key={favorite.id}><button className="favorite-load" onClick={() => { setRecipe(structuredClone(favorite.recipe)); setAnnouncement(`${favorite.name} is back, exactly as you saved them.`); animate(); }} aria-label={`Load ${favorite.name}`}><Monster recipe={favorite.recipe} label={favorite.name}/><span>{favorite.name}</span><small>{favorite.id === recipeKey(recipe) ? 'ON THE STAGE' : 'BRING ME BACK'}</small></button><button className="favorite-remove" aria-label={`Remove ${favorite.name}`} onClick={() => { setFavorites(f => f.filter(item => item.id !== favorite.id)); setAnnouncement(`${favorite.name} removed from favorites.`); }}><Icon name="close" size={14}/></button></div>)}</div>}
     </section>
     <div className="feedback" role="status" aria-live="polite" aria-atomic="true">{announcement || 'Your next favorite monster is one roll away.'}</div>
     {storageError && <p className="storage-warning" role="alert">Your browser couldn’t save this session. Download your monster to keep it, or enable browser storage.</p>}
-    <footer><span>Made for the joy of making something.</span><span><span className="status-dot"/> INSTANT MAGIC. NO AI REQUIRED.</span><span>STAY A LITTLE STRANGE <span aria-hidden="true">✳</span></span></footer>
+    <footer><span>Made for the joy of making something.</span><span><span className="status-dot"/> INSTANT MIXING. OPTIONAL AI MAGIC.</span><span>STAY A LITTLE STRANGE <span aria-hidden="true">✳</span></span></footer>
   </main>;
 }

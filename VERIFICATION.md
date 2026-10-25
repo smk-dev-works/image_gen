@@ -16,3 +16,14 @@ Checked against FIRST_ITERATION.md on 25 October 2026.
 Preview screenshot: `.artifacts/monster-mixer-desktop.jpg` (local QA artifact, ignored by Git).
 
 The five-person fun test in FIRST_ITERATION.md requires real participants and has not been performed. The app is ready for that playtest. AI illustration and additional templates remain deferred as specified.
+
+## Stage 2 — kids’ AI illustrations (25 October 2026)
+
+- `npm test`: 15 passing tests including prompt anatomy/colors/locks, all three looks, safe provider errors, missing images, raster validation, local-origin checks, immutable saved snapshots, concurrency limits, and persistent request-ID deduplication after both success and failure.
+- `npm run build` and `npm run typecheck`: pass with the new server routes and client illustration studio.
+- Live browser generation: GPT Image 2.5 Flare, high quality, Playful. Produced a valid 1024 × 1024 PNG in 18.9 seconds; provider-reported cost $0.05368. Visually inspected the friendly three-eyed clay monster, purple palette, waving hand and yellow boots. AI added its own surface details and small crest; exact feature fidelity is not guaranteed.
+- Rolled to a different character while the paid request was running: the completed illustration retained its original snapshot and did not overwrite the newer mixer. “Remix original” restored the saved original. Refresh retained the local image collection and original recipe.
+- Verified Realistic/Playful selection, saved-result switching, and narrow mobile layout. Fixed wrapping on the collection heading for narrow screens. Realistic rendering has offline prompt coverage but was not separately generated in this check.
+- Image download returns HTTP 200, PNG MIME type, nosniff, and an attachment filename. File inspection confirms a decodable 1024 × 1024 PNG.
+- Confirmed `.env.local` and generated artifacts are ignored by Git. No secrets appear in the client configuration response or committed example configuration.
+- This is a local, synchronous integration. Public/multi-process hosting and crash recovery need additional infrastructure as described in README.md. No participant fun test or comparative model benchmark was performed.

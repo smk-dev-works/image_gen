@@ -2,9 +2,9 @@
 
 Checked against FIRST_ITERATION.md on 25 October 2026.
 
-- `npm run build`: passes; the home page and SVG app icon are statically rendered.
-- `npm run typecheck`: passes. The production build also checks TypeScript.
-- `npm test`: eight passing tests. Covers all 32 lock combinations for 20 rolls each, individual rerolls, deterministic seeds, 2,000 sampled valid recipes, exact storage round-trips, invalid saved data, and reduced-motion animation behavior.
+- `pnpm build`: passes; the home page and SVG app icon are statically rendered.
+- `pnpm typecheck`: passes. The production build also checks TypeScript.
+- `pnpm test`: eight passing tests. Covers all 32 lock combinations for 20 rolls each, individual rerolls, deterministic seeds, 2,000 sampled valid recipes, exact storage round-trips, invalid saved data, and reduced-motion animation behavior.
 - Browser: a finished monster appears on first load. Twenty successive rolls preserved locked eyes; all-locked state disables Roll; unlocking and rolling via Space/Enter worked. A direct mouth reroll changed only the mouth. Fresh start unlocked all five slots.
 - Persistence: after saving a favorite, refresh restored its exact SVG, palette, and lock state. Rolling away and recalling it also produced identical SVG markup.
 - Latency: sampled production rolls committed the new SVG in 1.2 ms, before the optional 320 ms reveal. Development measurements were 14–17 ms. These are local measurements, not a guarantee across devices.
@@ -19,8 +19,8 @@ The five-person fun test in FIRST_ITERATION.md requires real participants and ha
 
 ## Stage 2 — kids’ AI illustrations (25 October 2026)
 
-- `npm test`: 15 passing tests including prompt anatomy/colors/locks, all three looks, safe provider errors, missing images, raster validation, local-origin checks, immutable saved snapshots, concurrency limits, and persistent request-ID deduplication after both success and failure.
-- `npm run build` and `npm run typecheck`: pass with the new server routes and client illustration studio.
+- `pnpm test`: 15 passing tests including prompt anatomy/colors/locks, all three looks, safe provider errors, missing images, raster validation, local-origin checks, immutable saved snapshots, concurrency limits, and persistent request-ID deduplication after both success and failure.
+- `pnpm build` and `pnpm typecheck`: pass with the new server routes and client illustration studio.
 - Live browser generation: GPT Image 2.5 Flare, high quality, Playful. Produced a valid 1024 × 1024 PNG in 18.9 seconds; provider-reported cost $0.05368. Visually inspected the friendly three-eyed clay monster, purple palette, waving hand and yellow boots. AI added its own surface details and small crest; exact feature fidelity is not guaranteed.
 - Rolled to a different character while the paid request was running: the completed illustration retained its original snapshot and did not overwrite the newer mixer. “Remix original” restored the saved original. Refresh retained the local image collection and original recipe.
 - Verified Realistic/Playful selection, saved-result switching, and narrow mobile layout. Fixed wrapping on the collection heading for narrow screens. Realistic rendering has offline prompt coverage but was not separately generated in this check.

@@ -4,18 +4,18 @@ A local, playful character mixer. Roll a Blob monster, lock the bits you love, r
 
 ## Run
 
-Requires Node.js 20.9 or newer and npm.
+Requires Node.js 20.9 or newer and pnpm 10.26.0.
 
 ```sh
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-Open http://127.0.0.1:3000. For a production build, use `npm run build` followed by `npm start`.
+Open http://127.0.0.1:3000. For a production build, use `pnpm build` followed by `pnpm start`.
 
 ```sh
-npm test
-npm run typecheck
+pnpm test
+pnpm typecheck
 ```
 
 ## First iteration

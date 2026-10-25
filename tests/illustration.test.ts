@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compilePrompt, isLook, looks } from '../lib/illustration';
+import { compilePrompt, compileEditPrompt, describeParts, isLook, looks } from '../lib/illustration';
 import { initialRecipe, createRecipe } from '../lib/recipe';
 import { decodeImage, generateImage } from '../lib/providers/openrouter';
 import { localRequest, POST } from '../app/api/generations/route';
@@ -40,6 +40,11 @@ test('provider sends one image request and decodes actual raster bytes', async (
       return Response.json({ data: [{ b64_json: png }], usage: { cost: 0.05 } });
     });
     assert.equal(calls, 1); assert.equal(result.mediaType, 'image/png'); assert.equal(result.cost, 0.05);
+    await generateImage('Match the drawing', 'test/model', async (_url, options) => {
+      const body = JSON.parse(options!.body as string);
+      assert.deepEqual(body.input_references, [{ type: 'image_url', image_url: { url: `data:image/png;base64,${png}` } }]);
+      return Response.json({ data: [{ b64_json: png }] });
+    }, [`data:image/png;base64,${png}`]);
     const withoutCost = await generateImage('test', 'other/model', async (_url, options) => {
       assert.equal(JSON.parse(options!.body as string).quality, undefined);
       return Response.json({ data: [{ b64_json: png }] });
@@ -69,4 +74,12 @@ test('generation route rejects cross-origin, nonlocal and invalid recipes before
 test('local host normalization still accepts same-origin browser requests', () => {
   assert.equal(localRequest(new Request('http://localhost:3001/api/generations', { headers: { host: '127.0.0.1:3001', origin: 'http://127.0.0.1:3001' } })), true);
   assert.equal(localRequest(new Request('http://localhost:3001/api/generations', { headers: { host: 'evil.example', origin: 'http://evil.example' } })), false);
+});
+
+test('visual reference and localized edit prompts prioritize shape fidelity', () => {
+  assert.match(compilePrompt(initialRecipe, 'playful'), /exact SVG design reference/);
+  assert.match(describeParts(initialRecipe).eyes, /shallow triangle/);
+  const prompt = compileEditPrompt({ sourceId: crypto.randomUUID(), slot: 'feet', description: 'two tiny legs' });
+  assert.match(prompt, /Replace only the feet and legs with: two tiny legs/);
+  assert.match(prompt, /every other body part unchanged/);
 });

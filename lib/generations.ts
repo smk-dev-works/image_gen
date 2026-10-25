@@ -1,7 +1,7 @@
 import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { compilePrompt, PROMPT_VERSION, type Generation, type Look } from './illustration';
+import { compilePrompt, compileEditPrompt, describeParts, PROMPT_VERSION, type Generation, type Look, type PartDescriptions, type PartEdit } from './illustration';
 import type { Recipe } from './recipe';
 import { DEFAULT_IMAGE_MODEL, generateImage, ProviderError } from './providers/openrouter';
 
@@ -30,21 +30,31 @@ export async function listGenerations() {
 const state = globalThis as typeof globalThis & { monsterGenerationBusy?: boolean };
 export class GenerationBusyError extends Error {}
 export class RequestConflictError extends Error {}
-export async function illustrate(id: string, recipe: Recipe, look: Look): Promise<Generation> {
+export async function illustrate(id: string, recipe: Recipe, look: Look, options: { reference?: string; descriptions?: PartDescriptions; edit?: PartEdit } = {}): Promise<Generation> {
   if (state.monsterGenerationBusy) throw new GenerationBusyError('An illustration is already cooking. Please wait for it to finish.');
   state.monsterGenerationBusy = true;
   try {
     const hash = createHash('sha256').update(JSON.stringify(recipe)).digest('hex');
+    const requestHash = createHash('sha256').update(JSON.stringify({ recipe, look, options })).digest('hex');
     const existing = await getGeneration(id);
     if (existing) {
-      if (existing.recipeHash !== hash || existing.look !== look) throw new RequestConflictError('That request ID belongs to another monster.');
+      if (existing.recipeHash !== hash || existing.look !== look || (existing.requestHash && existing.requestHash !== requestHash)) throw new RequestConflictError('That request ID belongs to another monster.');
       return existing;
     }
-    const record: Generation = { id, recipe: structuredClone(recipe), look, model: configuredModel(), recipeHash: hash, prompt: compilePrompt(recipe, look), promptVersion: PROMPT_VERSION, status: 'running', createdAt: new Date().toISOString() };
+    const references: string[] = [];
+    let descriptions = options.descriptions || describeParts(recipe);
+    if (options.edit) {
+      const source = await getGeneration(options.edit.sourceId);
+      if (!source || source.status !== 'succeeded') throw new RequestConflictError('Choose a completed illustration to edit.');
+      if (JSON.stringify(source.recipe) !== JSON.stringify(recipe) || source.look !== look) throw new RequestConflictError('Part edits must use the current illustration recipe and look.');
+      descriptions = { ...(source.descriptions || describeParts(source.recipe)), [options.edit.slot]: options.edit.description };
+      references.push(`data:${source.mediaType};base64,${(await readFile(imagePath(source.id))).toString('base64')}`);
+    } else if (options.reference) references.push(options.reference);
+    const record: Generation = { id, recipe: structuredClone(recipe), look, model: configuredModel(), recipeHash: hash, prompt: options.edit ? compileEditPrompt(options.edit) : compilePrompt(recipe, look, descriptions), descriptions, edit: options.edit, requestHash, promptVersion: PROMPT_VERSION, status: 'running', createdAt: new Date().toISOString() };
     await persist(record);
     const started = Date.now();
     try {
-      const image = await generateImage(record.prompt, record.model);
+      const image = await generateImage(record.prompt, record.model, fetch, references);
       await writeFile(imagePath(id), image.bytes);
       Object.assign(record, { status: 'succeeded', mediaType: image.mediaType, cost: image.cost });
     } catch (error) {

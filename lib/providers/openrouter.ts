@@ -11,7 +11,7 @@ export function decodeImage(value: unknown): { bytes: Buffer; mediaType: string 
   return { bytes, mediaType };
 }
 
-export async function generateImage(prompt: string, model: string, fetcher: typeof fetch = fetch) {
+export async function generateImage(prompt: string, model: string, fetcher: typeof fetch = fetch, references: string[] = []) {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new ProviderError('Add OPENROUTER_API_KEY to .env.local and restart the app.');
   const configuredTimeout = Number(process.env.GENERATION_TIMEOUT_MS || 180000);
@@ -20,7 +20,7 @@ export async function generateImage(prompt: string, model: string, fetcher: type
   try {
     response = await fetcher('https://openrouter.ai/api/v1/images', {
       method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, prompt, n: 1, aspect_ratio: '1:1', ...(model.startsWith('openai/') ? { quality: 'high' } : {}) }),
+      body: JSON.stringify({ model, prompt, n: 1, ...(references.length ? { input_references: references.map(url => ({ type: 'image_url', image_url: { url } })) } : {}), aspect_ratio: '1:1', ...(model.startsWith('openai/') ? { quality: 'high' } : {}) }),
       signal: AbortSignal.timeout(timeout),
     });
   } catch {
